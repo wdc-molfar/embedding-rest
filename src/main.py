@@ -8,8 +8,7 @@ import sys
 import traceback
 import warnings
 from src.models import main_download_transform, download_model, save_model, transform_umap_model, open_umap_model
-
-import joblib
+import os
 from sentence_transformers import SentenceTransformer
 
 warnings.filterwarnings("ignore", message=r"\[W033\]", category=UserWarning)
@@ -22,14 +21,34 @@ model = SentenceTransformer("nomic-ai/nomic-embed-text-v1",
                             revision='02d96723811f4bb77a80857da07eda78c1549a4d',
                             trust_remote_code=True)
 
-# umap-cluster model
+# Check if models exists
+def check_model_exist(path):
+    if os.path.isfile(path):
+        return True
+    else:
+        return False
+
+# umap-cluster model name
 umap_cluster_model_name = 'src/models/umap-models/umap-cluster.joblib'
-# umap-display model
+# umap-display model name
 umap_display_model_name = 'src/models/umap-models/umap-display.joblib'
+
+# Setting hyperparameters
+hyper_params = {"n_components": 8,
+                "n_neighbors": 15,
+                "random_state": 42,
+                "min_dist": 0.05,
+                "metric": 'cosine',
+                "n_jobs": 1}
+
+# Check if models exists else Download and Save model, Transform and Save models
+if not (check_model_exist(umap_cluster_model_name) and check_model_exist(umap_display_model_name)):
+    main_download_transform(hyper_params)
 
 # Open umap models
 reduced_cluster = open_umap_model(umap_cluster_model_name)
 reduced_display = open_umap_model(umap_display_model_name)
+
 
 def embedding(text):
     # Embedding
@@ -52,15 +71,6 @@ class Item(BaseModel):
 
 # Create a FastAPI instance
 app = FastAPI()
-
-# Setting hyperparameters
-hyper_params = {"n_components": 8,
-                "n_neighbors": 15,
-                "random_state": 42,
-                "min_dist": 0.05,
-                "metric": 'cosine',
-                "n_jobs": 1}
-
 
 # Define a path GET-operation decorator
 @app.get("/download")
