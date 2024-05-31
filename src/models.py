@@ -38,7 +38,7 @@ def open_umap_model(umap_model_name):
     umap_model = joblib.load(open(umap_model_name, 'rb'))
     return umap_model
 
-
+# Download and Save model, Transform and Save models
 def main_download_transform(params) -> None:
     # Download model
     model = download_model()
